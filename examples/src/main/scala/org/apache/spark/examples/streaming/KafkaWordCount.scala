@@ -103,13 +103,74 @@ object KafkaWordCountProducer {
         val str = (1 to wordsPerMessage.toInt).map(x => scala.util.Random.nextInt(10).toString)
           .mkString(" ")
 
-        val message = new ProducerRecord[String, String](topic, null, str)
+        this.js
+
+        val message = new ProducerRecord[String, String](topic, null, this.js)
+//        val message = new ProducerRecord[String, String](topic, null, str)
         producer.send(message)
       }
 
       Thread.sleep(1000)
     }
   }
+
+  val js = """{
+    "tracking_id": "0305A750-0DB1-4B1A-979D-9D860353A899",
+    "application_name": null,
+    "application_user_id": null,
+    "application_version": "11.8.2.2",
+    "application_build": "2",
+    "conn_type": "WIFI",
+    "timezone": "America/Los_Angeles",
+    "user_language": "en",
+    "sdk_version": "3.3.0",
+    "source": "ADVERTISER_SDK",
+    "page": {
+      "page": {
+      "referrer": "http://www.radiumone.com",
+      "title": "AdTech Ninjas",
+      "url": "www.cnn.com",
+      "scroll_position": "30x40"
+    }
+    },
+    "device_info": {
+      "device_info": {
+      "id_info": {
+      "post_cookie": "32charactersneeded",
+      "ob_login": "ob_login_value",
+      "opt_out": false
+    },
+      "ip_v4": "92.117.48.48.99.48.92.117.48.48.97.56.92.117.48.48.48.49.92.117.48.48.52.54",
+      "user_agent": "Mozilla/5.0 (iPad; CPU OS 10_1_1 like Mac OS X) AppleWebKit/602.2.14 (KHTML, like Gecko) Mobile/14B100",
+      "screen": {
+      "width": 320,
+      "height": 568,
+      "density": 2,
+      "viewport_size": "768x1024"
+    }
+    }
+    },
+    "event_info": {
+      "event_info": [
+    {
+      "event_name": "Key-SearchBegan",
+      "key_value": {
+      "network": "RealZeit - Android",
+      "source": "RealiZeit > RealZeit - Android",
+      "id": "123",
+      "name": "Shoes",
+      "currency": "USD",
+      "receipt_status": "no_receipt"
+    },
+      "lat": null,
+      "lon": null,
+      "session_id": "D8A7BBF6-DCF2-40AA-9E66-B78C44B816E5",
+      "timestamp": 1481329407375,
+      "transaction_id": "92.117.48.48.52.102.92.117.48.48.48.51.92.117.48.48.99.51.92.117.48.48.52.56.92.117.48.48.100.55.92.117.48.48.48.56.92.117.48.48.52.54.92.117.48.48.98.57.92.117.48.48.56.50.92.117.48.48.100.54.92.117.48.48.98.54.92.117.48.48.55.50.92.117.48.48.48.97.92.117.48.48.102.97.92.117.48.48.52.57.92.117.48.48.102.102"
+    }
+      ]
+    }
+  }"""
 
 }
 // scalastyle:on println
