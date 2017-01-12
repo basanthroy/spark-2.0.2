@@ -26,6 +26,8 @@ import org.apache.spark.SparkConf
 import org.apache.spark.streaming._
 import org.apache.spark.streaming.kafka._
 
+
+
 /**
  * Consumes messages from one or more topics in Kafka and does wordcount.
  * Usage: KafkaWordCount <zkQuorum> <group> <topics> <numThreads>
@@ -100,13 +102,13 @@ object KafkaWordCountProducer {
     // Send some messages
     while(true) {
       (1 to messagesPerSec.toInt).foreach { messageNum =>
-        val str = (1 to wordsPerMessage.toInt).map(x => scala.util.Random.nextInt(10).toString)
-          .mkString(" ")
+//        val str = (1 to wordsPerMessage.toInt).map(x => scala.util.Random.nextInt(10).toString)
+//          .mkString(" ")
 
-        this.js
+        val str = requestJsonTemplate format sampleTrackingIds(scala.util.Random.nextInt(sampleTrackingIds.size))
 
-        val message = new ProducerRecord[String, String](topic, null, this.js)
-//        val message = new ProducerRecord[String, String](topic, null, str)
+//        val message = new ProducerRecord[String, String](topic, null, this.js)
+        val message = new ProducerRecord[String, String](topic, null, str)
         producer.send(message)
       }
 
@@ -114,8 +116,11 @@ object KafkaWordCountProducer {
     }
   }
 
-  val js = """{
-    "tracking_id": "0305A750-0DB1-4B1A-979D-9D860353A899",
+  val sampleTrackingIds = List("B80854A8-7B56-4041-8DED-F353890C7976", "C11DC874-7582-4F82-9DAD-94244FAFC999", "AEA4F0B2-D876-4E0E-AF01-A7C8010BBE33",
+  "C813F76D-F79F-4F1C-BEE8-CA5CF3A7B71E", "4ED10645-5D2E-476D-9C90-A29B5C12E365")
+
+  val requestJsonTemplate = """{
+    "tracking_id": "%s",
     "application_name": null,
     "application_user_id": null,
     "application_version": "11.8.2.2",

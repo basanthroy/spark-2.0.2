@@ -9,6 +9,3 @@
 # Maven
 log/
 target/
-target
-examples/target
-examples/target/
