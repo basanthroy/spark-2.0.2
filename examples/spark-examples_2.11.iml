@@ -125,6 +125,7 @@
     <orderEntry type="library" scope="PROVIDED" name="Maven: net.sf.py4j:py4j:0.10.3" level="project" />
     <orderEntry type="module" module-name="spark-tags_2.11" scope="PROVIDED" />
     <orderEntry type="module" module-name="spark-streaming_2.11" scope="PROVIDED" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.spark:spark-streaming-kafka-0-10_2.11:2.1.0" level="project" />
     <orderEntry type="module" module-name="spark-mllib_2.11" scope="PROVIDED" />
     <orderEntry type="module" module-name="spark-sql_2.11" scope="PROVIDED" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.univocity:univocity-parsers:2.1.1" level="project" />

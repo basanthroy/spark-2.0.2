@@ -2,9 +2,22 @@
 package org.apache.spark.examples.streaming
 
 
+import java.util
+
+import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming._
-import org.apache.spark.streaming.kafka._
+import kafka.producer.ProducerConfig
+import org.apache.kafka.common.serialization.StringSerializer
+//import org.apache.spark.streaming.kafka._
+
+import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.kafka.common.serialization.StringDeserializer
+import org.apache.spark.streaming.kafka010._
+import org.apache.spark.streaming.kafka010.LocationStrategies.PreferConsistent
+import org.apache.spark.streaming.kafka010.ConsumerStrategies.Subscribe
 
 
 /**
@@ -27,9 +40,14 @@ object KafkaGroupMessagesForKeen {
       System.exit(1)
     }
 
+    val REST_PAYLOAD_RECORD_LIMIT:Int = 2000
+    val kafkaOpTopic:String = "DESTINATION_TOPIC"
+    val kafkaBrokers = "localhost:9092"
+
     StreamingExamples.setStreamingLogLevels()
 
     val Array(zkQuorum, group, topics, numThreads) = args
+
     System.err.println("Usage: KafkaWordCount <zkQuorum> <group> <topics> <numThreads> BASANTH -----")
     System.err.println("Usage: KafkaWordCount <zkQuorum> <group> <topics> <numThreads> BASANTH -----")
     System.err.println("Usage: KafkaWordCount <zkQuorum> <group> <topics> <numThreads> BASANTH -----")
@@ -44,16 +62,94 @@ object KafkaGroupMessagesForKeen {
     val ssc = new StreamingContext(sparkConf, Seconds(2))
     ssc.checkpoint("checkpoint")
 
-    val topicMap = topics.split(",").map((_, numThreads.toInt)).toMap
-    val lines = KafkaUtils.createStream(ssc, zkQuorum, group, topicMap).map(_._2)
-    val words = lines.flatMap(_.split(" "))
-    val wordCounts = words.map(x => (x, 1L))
-      .reduceByKeyAndWindow(_ + _, _ - _, Minutes(10), Seconds(2), 2)
-    wordCounts.print()
+//    val topicMap = topics.split(",").map((_, numThreads.toInt)).toMap
+
+    val kafkaParams = Map[String, Object](
+      "bootstrap.servers" -> "localhost:9092",
+      "key.deserializer" -> classOf[StringDeserializer],
+      "value.deserializer" -> classOf[StringDeserializer],
+//      "group.id" -> "use_a_separate_group_id_for_each_stream",
+      "group.id" -> group,
+      "auto.offset.reset" -> "latest",
+      "enable.auto.commit" -> (false: java.lang.Boolean)
+    )
+
+    val topics2 = Array("topicA", "topicB")
+
+    val stream = KafkaUtils.createDirectStream[String, String](
+      ssc,
+      PreferConsistent,
+      Subscribe[String, String](topics2, kafkaParams)
+    )
+
+    val objectMapper:ObjectMapper = new ObjectMapper()
+
+    case class restJsonRecord(f1:String)
+
+//    var groupedRecords:Map[String, String] = Map()
+    var count:Int = 0
+
+    val producer = createProducer(kafkaBrokers)
+
+    stream.foreachRDD(x =>
+      {
+
+        // TODO : do we need to iterate over the partitions or can
+        // TODO : we somehow iterate over the records in the
+        // TODO : RDD directly ? I didn't see a slice() method for the 'x' RDD object
+        x.foreachPartition(part => {
+          val loopIndex = 0
+          while (!part.isEmpty) {
+
+//            part.take(2000)
+//            part.drop(2000)
+            // TODO : ensure that slice removes the 'taken' element so that
+            // TODO : in the next iteration of the loop, the next set of elements are
+            // TODO : chosen and not the same ones again
+            val groupedRecords = part
+                                  .slice(loopIndex,loopIndex + REST_PAYLOAD_RECORD_LIMIT)
+                                  .map(cr => cr.value())
+
+//            objectMapper.readValue(cr.value(), classOf[restJsonRecord])
+
+             val message = new ProducerRecord[String, String](kafkaOpTopic, null, groupedRecords.toString())
+             producer.send(message)
+
+          }
+        }
+        )
+
+      }
+    )
 
     ssc.start()
     ssc.awaitTermination()
+
   }
+
+  def objmapp() {
+    var value:String = """{"FName":"Mad", "LName": "Max"}"""
+    val objectMapper: ObjectMapper = new ObjectMapper()
+    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    objectMapper.registerModule(DefaultScalaModule)
+    val jsonObject:Person = objectMapper
+      .readValue(value, classOf[Person])
+    println("jsonobject" + jsonObject)
+    println("string value" + objectMapper.writeValueAsString(jsonObject))
+  }
+
+  def createProducer(kafkaBrokers: String):KafkaProducer[String, String] = {
+    val props = new util.HashMap[String, Object]()
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBrokers)
+    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, classOf[StringSerializer].getName)
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, classOf[StringSerializer].getName)
+    val producer = new KafkaProducer[String, String](props)
+    producer
+  }
+
+
 }
+
+
 
 // scalastyle:on println
