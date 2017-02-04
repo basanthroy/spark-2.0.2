@@ -9,7 +9,6 @@ import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming._
-import kafka.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringSerializer
 //import org.apache.spark.streaming.kafka._
 
@@ -35,13 +34,23 @@ import org.apache.spark.streaming.kafka010.ConsumerStrategies.Subscribe
  */
 object KafkaGroupMessagesForKeen {
   def main(args: Array[String]) {
+
+    System.err.println("REACHED BEGINNING..........")
+    System.err.println("REACHED BEGINNING..........")
+    System.err.println("REACHED BEGINNING..........")
+    System.err.println("REACHED BEGINNING..........")
+    System.err.println("REACHED BEGINNING..........")
+    System.err.println("REACHED BEGINNING..........")
+    System.err.println("REACHED BEGINNING..........")
+
+
     if (args.length < 4) {
       System.err.println("Usage: KafkaWordCount <zkQuorum> <group> <topics> <numThreads>")
       System.exit(1)
     }
 
     val REST_PAYLOAD_RECORD_LIMIT:Int = 2000
-    val kafkaOpTopic:String = "DESTINATION_TOPIC"
+    val kafkaOpTopic:String = "SINGLEPARTITION_REST_TOPIC"
     val kafkaBrokers = "localhost:9092"
 
     StreamingExamples.setStreamingLogLevels()
@@ -74,7 +83,8 @@ object KafkaGroupMessagesForKeen {
       "enable.auto.commit" -> (false: java.lang.Boolean)
     )
 
-    val topics2 = Array("topicA", "topicB")
+//    val topics2 = Array("topicA", "topicB")
+    val topics2 = Array(topics)
 
     val stream = KafkaUtils.createDirectStream[String, String](
       ssc,
@@ -89,7 +99,7 @@ object KafkaGroupMessagesForKeen {
 //    var groupedRecords:Map[String, String] = Map()
     var count:Int = 0
 
-    val producer = createProducer(kafkaBrokers)
+
 
     stream.foreachRDD(x =>
       {
@@ -110,7 +120,16 @@ object KafkaGroupMessagesForKeen {
                                   .slice(loopIndex,loopIndex + REST_PAYLOAD_RECORD_LIMIT)
                                   .map(cr => cr.value())
 
+            // TODO : 1. Need to tune batch sizes so that we don't end up with lot of tiny REST
+            // TODO :    payloads due to the lack of availability of data in any one specific
+            // TODO :    time interval.
+            // TODO : 2. Another option is to have a wider time interval for batch size and if we end up with
+            // TODO :    larger record counts, then just send the surplus records back into same kafka to be
+            // TODO :    processed later
+
 //            objectMapper.readValue(cr.value(), classOf[restJsonRecord])
+
+            val producer = createProducer(kafkaBrokers)
 
              val message = new ProducerRecord[String, String](kafkaOpTopic, null, groupedRecords.toString())
              producer.send(message)
@@ -143,6 +162,7 @@ object KafkaGroupMessagesForKeen {
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBrokers)
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, classOf[StringSerializer].getName)
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, classOf[StringSerializer].getName)
+//    props.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, classOf[StringSerializer].getName)
     val producer = new KafkaProducer[String, String](props)
     producer
   }

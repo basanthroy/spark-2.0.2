@@ -87,9 +87,17 @@
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-streaming-kafka-0-8_${scala.binary.version}</artifactId>
+      <!--<artifactId>spark-streaming-kafka-0-10_${scala.binary.version}</artifactId>-->
+      <artifactId>spark-streaming-kafka-0-10_${scala.binary.version}</artifactId>
+      <!--<artifactId>spark-streaming-kafka-0-10_2.10</artifactId>-->
       <version>${project.version}</version>
       <scope>provided</scope>
+      <!--<exclusions>-->
+        <!--<exclusion>-->
+          <!--<artifactId>org.scalatest</artifactId>-->
+          <!--<groupId>scalatest_2.10</groupId>-->
+        <!--</exclusion>-->
+      <!--</exclusions>-->
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
